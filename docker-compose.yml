@@ -1,0 +1,50 @@
+version: "3.8"
+services:
+
+  mesh_mariadb:
+    container_name: mesh_mariadb
+    restart: "no"
+    image: mariadb:10.8
+    working_dir: /opt/sqldump
+    environment:
+      MYSQL_ROOT_PASSWORD: qwerty123!
+    volumes:
+      - ./sqldump:/opt/sqldump
+    ports:
+      - "10701:3306"
+    networks:
+      mesh:
+        aliases:
+          - mesh_mariadb
+
+  mesh_redis:
+    container_name: mesh_redis
+    restart: "no"
+    image: redis:7.0-alpine
+    ports:
+      - "10702:6379"
+    networks:
+      mesh:
+        aliases:
+          - mesh_redis
+
+  mesh_php:
+    user: dev:dev
+    container_name: mesh_php
+    build: ./docker_config/php
+    volumes:
+      - ./application:/application
+      - ./docker_config/php/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./docker_config/supervisor/parse-excel-worker.conf:/etc/supervisor/conf.d/parse-excel-worker.conf
+      - ./docker_config/supervisor/default-worker.conf:/etc/supervisor/conf.d/default-worker.conf
+    working_dir: /application
+    restart: "no"
+    ports:
+      - "10705:9000"
+    networks:
+      mesh:
+        aliases:
+          - mesh_php
+
+networks:
+  mesh:
